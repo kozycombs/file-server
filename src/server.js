@@ -1,6 +1,7 @@
 const express = require("express");
 const fileupload = require("express-fileupload");
 const cors = require("cors");
+const path = require('path');
 
 const app = express();
 
@@ -27,20 +28,23 @@ app.post("/upload-file", async (req, res) => {
         message: "No file uploaded",
       });
     } else {
-
-      for (const key of Object.keys(req.files)) {
-        const files = req.files[key];
-
-        for (const file of files) {
+      if (Array.isArray(req.files.files)) {
+        for (const i in req.files.files) {
+          const file = req.files.files[i];
           const fileExtension = file.mimetype.split('/')[1];
-          file.mv("./uploads/" + `${file.name}_${Date.now()}.${fileExtension}`);
+          file.mv(path.join(__dirname, 'uploads', `${file.name}_${i}_${Date.now()}.${fileExtension}`));
         }
+      } else {
+        const file = req.files.files;
+        const fileExtension = file.mimetype.split('/')[1];
+        file.mv(path.join(__dirname, 'uploads', `${file.name}_0_${Date.now()}.${fileExtension}`));
       }
 
 
       res.send({
         status: "success",
         message: "File is uploaded",
+        body: { ...req.body }
       });
     }
   } catch (err) {
